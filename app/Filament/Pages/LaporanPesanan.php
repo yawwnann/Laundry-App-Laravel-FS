@@ -3,115 +3,104 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
-use App\Models\Order;
-use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form; // Import Form
+use Filament\Forms\Form;
+use App\Filament\Widgets\LaporanStatsOverviewWidget; // Import widget
+use App\Filament\Widgets\LaporanOrderTableWidget;  // Import widget tabel juga
 
-class LaporanPesanan extends Page implements HasForms // Implementasikan HasForms
+class LaporanPesanan extends Page implements HasForms
 {
-    use InteractsWithForms; // Gunakan trait ini
+    use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
     protected static ?string $navigationLabel = 'Laporan Pesanan';
     protected static ?string $navigationGroup = 'Laporan';
     protected static ?string $title = 'Laporan Pesanan';
-    protected static string $view = 'filament.pages.laporan-pesanan'; // Menunjuk ke file blade kita
+    protected static string $view = 'filament.pages.laporan-pesanan'; // Blade view kita
 
-    // Properti untuk menyimpan data laporan
-    public ?int $totalOrders = 0;
-    public ?float $totalRevenue = 0.0;
-    public ?int $newCustomers = 0;
-    public array $ordersData = [];
-
-    // Properti untuk filter tanggal
     public ?string $startDate = null;
     public ?string $endDate = null;
 
+    // Tidak perlu properti statistik di sini lagi ($totalOrders, dll.)
+
     public function mount(): void
     {
-        // Default: tampilkan laporan untuk bulan ini
         $this->startDate = Carbon::now()->startOfMonth()->toDateString();
         $this->endDate = Carbon::now()->endOfMonth()->toDateString();
-        $this->loadReportData();
+        $this->dispatchReportUpdate();
     }
 
-    // Mendefinisikan form untuk filter tanggal
     public function form(Form $form): Form
     {
         return $form
             ->schema([
                 DatePicker::make('startDate')
                     ->label('Tanggal Mulai')
-                    ->default($this->startDate)
-                    ->reactive()
-                    ->afterStateUpdated(fn() => $this->loadReportData()),
+                    ->live()
+                    ->afterStateUpdated(function () {
+                        $this->dispatchReportUpdate();
+                    }),
                 DatePicker::make('endDate')
                     ->label('Tanggal Selesai')
-                    ->default($this->endDate)
-                    ->reactive()
-                    ->afterStateUpdated(fn() => $this->loadReportData()),
+                    ->live()
+                    ->afterStateUpdated(function () {
+                        $this->dispatchReportUpdate();
+                    }),
             ])
             ->columns(2)
-            ->statePath('filterData'); // Menyimpan state form filter
+            ->fill([
+                'startDate' => $this->startDate,
+                'endDate' => $this->endDate,
+            ]);
     }
 
-    // Untuk menyimpan data filter dari form ke properti kelas
-    // (Tidak perlu jika sudah menggunakan statePath dan properti kelas langsung)
-    // public array $filterData = []; 
-
-    public function loadReportData(): void
+    protected function dispatchReportUpdate(): void
     {
-        $start = Carbon::parse($this->startDate)->startOfDay();
-        $end = Carbon::parse($this->endDate)->endOfDay();
-
-        $query = Order::whereBetween('created_at', [$start, $end]);
-
-        $this->totalOrders = (clone $query)->count();
-        $this->totalRevenue = (clone $query)->where('payment_status', 'lunas')->sum('total_amount');
-
-        // Ambil daftar pesanan untuk tabel (contoh sederhana)
-        $this->ordersData = (clone $query)
-            ->with('customer') // Eager load relasi customer
-            ->select('kode_pesanan', 'user_id', 'order_date', 'total_amount', 'status_pesanan', 'payment_status')
-            ->orderBy('order_date', 'desc')
-            ->take(100) // Batasi jumlah data yang diambil untuk tabel
-            ->get()
-            ->toArray();
-
-        // Contoh menghitung pelanggan baru (yang order pertama kali dalam periode ini)
-        $this->newCustomers = User::where('role', 'pelanggan')
-            ->whereHas('orders', function ($q) use ($start, $end) {
-                $q->whereBetween('created_at', [$start, $end]);
-            })
-            ->whereDoesntHave('orders', function ($q) use ($start) {
-                $q->where('created_at', '<', $start);
-            })
-            ->count();
+        // Kirim event ke kedua widget (Stats dan Tabel)
+        $filters = ['startDate' => $this->startDate, 'endDate' => $this->endDate];
+        $this->dispatch('updateLaporanStats', filters: $filters); // Untuk StatsOverviewWidget
+        $this->dispatch('dateRangeUpdatedForTable', filters: $filters); // Untuk LaporanOrderTableWidget
     }
 
-    // Metode untuk filter cepat
     public function filterToday(): void
     {
         $this->startDate = Carbon::now()->toDateString();
         $this->endDate = Carbon::now()->toDateString();
-        $this->loadReportData();
+        $this->form->fill(['startDate' => $this->startDate, 'endDate' => $this->endDate]);
+        $this->dispatchReportUpdate();
     }
 
     public function filterThisMonth(): void
     {
         $this->startDate = Carbon::now()->startOfMonth()->toDateString();
         $this->endDate = Carbon::now()->endOfMonth()->toDateString();
-        $this->loadReportData();
+        $this->form->fill(['startDate' => $this->startDate, 'endDate' => $this->endDate]);
+        $this->dispatchReportUpdate();
     }
 
     public function filterLastMonth(): void
     {
-        $this->startDate = Carbon::now()->subMonth()->startOfMonth()->toDateString();
-        $this->endDate = Carbon::now()->subMonth()->endOfMonth()->toDateString();
-        $this->loadReportData();
+        $this->startDate = Carbon::now()->subMonthNoOverflow()->startOfMonth()->toDateString();
+        $this->endDate = Carbon::now()->subMonthNoOverflow()->endOfMonth()->toDateString();
+        $this->form->fill(['startDate' => $this->startDate, 'endDate' => $this->endDate]);
+        $this->dispatchReportUpdate();
+    }
+
+    // Mendaftarkan widget yang akan ditampilkan di halaman ini
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanStatsOverviewWidget::class, // Widget statistik kita
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            LaporanOrderTableWidget::class, // Widget tabel kita
+        ];
     }
 }
