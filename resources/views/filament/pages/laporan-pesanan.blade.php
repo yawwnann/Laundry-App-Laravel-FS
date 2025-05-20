@@ -10,7 +10,7 @@
         <div wire:loading wire:target="dispatchReportUpdate, filterToday, filterThisMonth, filterLastMonth"
             class="mb-4 text-center">
             <x-filament::loading-indicator class="h-6 w-6 inline-block text-primary-500" />
-            <span class="text-sm text-gray-500 dark:text-gray-400">Memproses filter...</span>
+            <span class="text-sm text-gray-500">Memproses filter...</span>
         </div>
 
         {{ $this->form }} {{-- Form filter tanggal --}}
