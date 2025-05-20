@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB; // Untuk transaksi
 use Illuminate\Validation\Rule; // Untuk validasi
 use Illuminate\Support\Facades\Log; // Untuk logging
+use Illuminate\Auth\Access\AuthorizationException;
 
 class OrderController extends Controller
 {
@@ -97,5 +98,53 @@ class OrderController extends Controller
             log::error('Error saat membuat pesanan: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.');
         }
+    }
+    public function index()
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->with('orderDetails.service') // Eager load detail dan layanan di detail
+            ->orderBy('created_at', 'desc') // Tampilkan yang terbaru dulu
+            ->paginate(10); // Gunakan paginasi jika pesanannya banyak
+
+        return view('customer.orders.index', compact('orders'));
+    }
+    public function show(Order $order) // Menggunakan Route Model Binding
+    {
+        // Pastikan pesanan ini milik pengguna yang sedang login
+        if (Auth::id() !== $order->user_id) {
+            // abort(403, 'Anda tidak memiliki izin untuk melihat pesanan ini.');
+            // Atau redirect dengan pesan error
+            return redirect()->route('customer.orders.index')->with('error', 'Anda tidak memiliki izin untuk melihat pesanan tersebut.');
+        }
+
+        // Eager load detail dan layanan di detail, juga customer jika perlu (meskipun sudah ada di $order->user_id)
+        $order->load('orderDetails.service', 'customer');
+
+        return view('customer.orders.show', compact('order'));
+    }
+
+    /**
+     * Membatalkan pesanan.
+     */
+    public function cancel(Request $request, Order $order)
+    {
+        // Pastikan pesanan ini milik pengguna yang sedang login
+        if (Auth::id() !== $order->user_id) {
+            return redirect()->route('customer.orders.index')->with('error', 'Aksi tidak diizinkan.');
+        }
+
+        // Hanya boleh dibatalkan jika statusnya masih 'baru'
+        if ($order->status_pesanan === 'baru') {
+            $order->status_pesanan = 'dibatalkan';
+            // Anda bisa menambahkan logika lain, misalnya:
+            // $order->payment_status = 'dibatalkan'; // jika relevan
+            // $order->catatan_internal = ($order->catatan_internal ? $order->catatan_internal . "\n" : "") . "Dibatalkan oleh pelanggan pada " . now()->isoFormat('D MMM YYYY, HH:mm');
+            $order->save();
+
+            return redirect()->route('customer.orders.show', $order)->with('success', 'Pesanan berhasil dibatalkan.');
+        }
+
+        return redirect()->route('customer.orders.show', $order)->with('error', 'Pesanan tidak dapat dibatalkan karena sudah diproses.');
     }
 }

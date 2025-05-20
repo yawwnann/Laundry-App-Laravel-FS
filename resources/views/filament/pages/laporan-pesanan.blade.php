@@ -13,7 +13,7 @@
             <span class="text-sm text-gray-500">Memproses filter...</span>
         </div>
 
-        {{ $this->form }} {{-- Form filter tanggal --}}
+        {{ $form }} {{-- Form filter tanggal --}}
 
         <div class="mt-4 flex flex-wrap items-center gap-2">
             <x-filament::button wire:click="filterToday" color="gray" size="sm" outlined wire:loading.attr="disabled"

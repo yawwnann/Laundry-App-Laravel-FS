@@ -16,9 +16,9 @@
                         <x-nav-link :href="route('customer.orders.create')" :active="request()->routeIs('customer.orders.create')">
                             {{ __('Buat Pesanan') }}
                         </x-nav-link>
-                        {{-- <x-nav-link :href="route('customer.orders.history')" :active="request()->routeIs('customer.orders.history')">
-                            {{ __('Riwayat Pesanan') }}
-                        </x-nav-link> --}}
+                        <x-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.index')">
+    {{ __('Riwayat Pesanan') }}
+</x-nav-link>
                     </div>
                 @endif
             </div>
@@ -76,9 +76,9 @@
                 <x-responsive-nav-link :href="route('customer.orders.create')" :active="request()->routeIs('customer.orders.create')">
                     {{ __('Buat Pesanan') }}
                 </x-responsive-nav-link>
-                {{-- <x-responsive-nav-link :href="route('customer.orders.history')" :active="request()->routeIs('customer.orders.history')">
-                    {{ __('Riwayat Pesanan') }}
-                </x-responsive-nav-link> --}}
+                <x-responsive-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.index')">
+    {{ __('Riwayat Pesanan') }}
+</x-responsive-nav-link>
             @endif
         </div>
 

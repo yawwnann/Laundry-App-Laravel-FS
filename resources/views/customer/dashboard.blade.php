@@ -95,19 +95,20 @@
                         </div>
                     </a>
 
-                    {{-- Kartu Lihat Layanan --}}
-                    {{-- <a href="#" 
-                       class="group block p-6 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 overflow-hidden shadow-md hover:shadow-lg sm:rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1">
+                    <a href="{{ route('customer.orders.index') }}"
+                        class="group block p-6 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 overflow-hidden shadow-md hover:shadow-lg sm:rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1">
                         <div class="flex items-center space-x-4">
-                            <div class="flex-shrink-0 p-3 bg-sky-500 dark:bg-sky-600 rounded-full text-white group-hover:scale-110 transition-transform duration-300">
-                                <x-heroicon-o-sparkles class="w-7 h-7"/>
+                            <div
+                                class="flex-shrink-0 p-3 bg-amber-500 dark:bg-amber-600 rounded-full text-white group-hover:scale-110 transition-transform duration-300">
+                                <x-heroicon-o-list-bullet class="w-7 h-7" />
                             </div>
                             <div>
-                                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Layanan Kami</h4>
-                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Lihat semua layanan yang tersedia.</p>
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Riwayat Pesanan</h4>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Cek status dan detail semua
+                                    pesanan Anda.</p>
                             </div>
                         </div>
-                    </a> --}}
+                    </a>
 
                     {{-- Kartu Riwayat Pesanan --}}
                     {{-- <a href="#"

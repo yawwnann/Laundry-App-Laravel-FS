@@ -17,10 +17,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-
-// Import Halaman Kustom dan Resource Anda jika tidak terdeteksi otomatis oleh discover...
 use App\Filament\Pages\LaporanPesanan;
-// Resources biasanya terdeteksi otomatis oleh ->discoverResources(...)
+use Filament\Navigation\MenuItem; // Pastikan MenuItem di-import
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -30,15 +28,17 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login() // Mengaktifkan halaman login default Filament
+            // ->logoutUrl(fn(): string => route('logout')) // Ini tidak lagi diperlukan jika kita override MenuItem atau menggunakan LogoutResponse binding
             ->colors([
-                'primary' => Color::Amber, // Sesuaikan warna primer Anda
+                'primary' => Color::Amber,
             ])
+            ->authGuard('web')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
-                LaporanPesanan::class, // Daftarkan halaman laporan
+                LaporanPesanan::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
@@ -58,6 +58,26 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->userMenuItems([
+                // Anda bisa menambahkan item menu lain di sini jika perlu, contoh:
+                // MenuItem::make()
+                //     ->label('Profil Saya (Breeze)')
+                //     ->url(fn (): string => route('profile.edit'))
+                //     ->icon('heroicon-o-user-circle'),
+                MenuItem::make()
+                    ->label('Profil Saya') // Contoh item lain
+                    ->url(fn(): string => route('profile.edit')) // Mengarah ke profile Breeze
+                    ->icon('heroicon-o-user-circle'),
+
+                // Mengganti item logout default untuk mengubah labelnya
+                'logout' => MenuItem::make()
+                    ->label('Sign Out') // Ganti label di sini
+                    ->icon('heroicon-o-arrow-left-on-rectangle')
+                // Biarkan Filament menangani action logout-nya.
+                // Action default Filament akan melakukan logout dan kemudian
+                // response-nya akan di-handle oleh FilamentLogoutResponse yang sudah kita buat,
+                // yang akan mengarahkannya ke route('login') Breeze.
             ]);
     }
 }
