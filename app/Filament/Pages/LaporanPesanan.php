@@ -10,6 +10,12 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use App\Filament\Widgets\LaporanStatsOverviewWidget; // Import widget
 use App\Filament\Widgets\LaporanOrderTableWidget;  // Import widget tabel juga
+use App\Models\Order;
+use App\Models\User;
+use Filament\Actions\Action; // Import Action
+use Barryvdh\DomPDF\Facade\Pdf; // Import Facade PDF
+use Dompdf\Options;
+use Illuminate\Support\Facades\Blade;
 
 class LaporanPesanan extends Page implements HasForms
 {
@@ -101,6 +107,64 @@ class LaporanPesanan extends Page implements HasForms
     {
         return [
             LaporanOrderTableWidget::class, // Widget tabel kita
+        ];
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('printPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(function () {
+                    $start = Carbon::parse($this->startDate)->startOfDay();
+                    $end = Carbon::parse($this->endDate)->endOfDay();
+
+                    $baseQueryPdf = Order::whereBetween('created_at', [$start, $end]);
+                    $pdfTotalOrders = (clone $baseQueryPdf)->count();
+                    $pdfTotalRevenue = (clone $baseQueryPdf)->where('payment_status', 'lunas')->sum('total_amount');
+                    $pdfNewCustomers = User::where('role', 'pelanggan')
+                        ->whereHas('orders', function ($q) use ($start, $end) {
+                            $q->whereBetween('created_at', [$start, $end]);
+                        })
+                        ->whereDoesntHave('orders', function ($q) use ($start) {
+                            $q->where('created_at', '<', $start);
+                        })
+                        ->count();
+
+                    $pdfOrdersData = (clone $baseQueryPdf)
+                        ->with('customer:id,name')
+                        ->select('kode_pesanan', 'user_id', 'order_date', 'total_amount', 'status_pesanan', 'payment_status')
+                        ->orderBy('order_date', 'desc')
+                        ->get()
+                        ->map(function ($order) {
+                            return $order->toArray();
+                        })
+                        ->all();
+
+                    $dataForPdf = [
+                        'startDate' => $this->startDate,
+                        'endDate' => $this->endDate,
+                        'totalOrders' => $pdfTotalOrders,
+                        'totalRevenue' => $pdfTotalRevenue,
+                        'newCustomers' => $pdfNewCustomers,
+                        'ordersData' => $pdfOrdersData,
+                    ];
+
+                    $fileName = 'laporan-pesanan-' . Carbon::parse($this->startDate)->format('Ymd') . '-' . Carbon::parse($this->endDate)->format('Ymd') . '.pdf';
+
+                    // Menggunakan array untuk setOptions
+                    $pdf = Pdf::setOptions([
+                        'isHtml5ParserEnabled' => true,
+                        'isRemoteEnabled' => true, // Untuk gambar/CSS eksternal jika ada
+                        'defaultCharset' => 'UTF-8', // Opsi untuk charset
+                    ])->loadView('pdf.laporan-pesanan', $dataForPdf)
+                        ->setPaper('a4', 'portrait');
+
+                    return response()->streamDownload(function () use ($pdf) {
+                        echo $pdf->output();
+                    }, $fileName);
+                }),
         ];
     }
 }
