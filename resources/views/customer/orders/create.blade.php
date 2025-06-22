@@ -86,12 +86,52 @@
 
                         <hr class="my-6 dark:border-gray-700">
 
-                        <div class="mt-4">
+                        <!-- Catatan Tambahan -->
+                        <div class="mt-6">
                             <label for="catatan_pelanggan"
-                                class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Catatan Tambahan (Opsional)') }}</label>
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Catatan
+                                Tambahan (Opsional)</label>
                             <textarea id="catatan_pelanggan" name="catatan_pelanggan" rows="3"
-                                class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">{{ old('catatan_pelanggan') }}</textarea>
-                            @error('catatan_pelanggan')
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 sm:text-sm"
+                                placeholder="Contoh: Tolong setrika yang rapi.">{{ old('catatan_pelanggan') }}</textarea>
+                        </div>
+
+                        <!-- Nomor Telepon -->
+                        <div class="mt-6">
+                            <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nomor
+                                Telepon</label>
+                            <input type="tel" id="phone" name="phone" value="{{ old('phone', Auth::user()->phone) }}"
+                                required
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 sm:text-sm"
+                                placeholder="Masukkan nomor telepon aktif">
+                            @error('phone')
+                                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Opsi Pengambilan -->
+                        <div class="mt-6">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Opsi
+                                Pengambilan</label>
+                            <div class="mt-2 space-y-2">
+                                <div class="flex items-center">
+                                    <input id="dijemput" name="delivery_option" type="radio" value="dijemput"
+                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                                        checked>
+                                    <label for="dijemput"
+                                        class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Di
+                                        Jemput
+                                        (diambil oleh pelanggan di toko)</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="diantar" name="delivery_option" type="radio" value="diantar"
+                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                                    <label for="diantar"
+                                        class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Diantar
+                                        (oleh kami ke alamat pelanggan)</label>
+                                </div>
+                            </div>
+                            @error('delivery_option')
                                 <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>

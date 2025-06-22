@@ -1,13 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController; // Asumsi ini dari Breeze
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController; // Ditambahkan untuk logout
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Customer\HelpController;
+use App\Http\Controllers\Customer\ServiceController as CustomerServiceController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -22,6 +24,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pesanan/riwayat', [CustomerOrderController::class, 'index'])->name('customer.orders.index');
     Route::get('/pesanan/{order}', [CustomerOrderController::class, 'show'])->name('customer.orders.show'); // Halaman detail
     Route::post('/pesanan/{order}/batal', [CustomerOrderController::class, 'cancel'])->name('customer.orders.cancel'); // Aksi batal
+    Route::get('/bantuan-faq', [HelpController::class, 'index'])->name('customer.help.index');
+    Route::get('/layanan-kami', [CustomerServiceController::class, 'index'])->name('customer.services.index');
 
     // // Route logout dipindahkan ke sini dan DILINDUNGI OLEH MIDDLEWARE AUTH
     // Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])

@@ -71,7 +71,22 @@ class OrderResource extends Resource
                                 return $action
                                     ->modalHeading('Buat Pelanggan Baru')
                                     ->modalSubmitActionLabel('Buat Pelanggan');
+                            })
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, ?string $state) {
+                                if ($state) {
+                                    $user = User::find($state);
+                                    $set('customer_phone', $user?->phone);
+                                } else {
+                                    $set('customer_phone', null);
+                                }
                             }),
+
+                        TextInput::make('customer_phone')
+                            ->label('Nomor Telepon')
+                            ->tel()
+                            ->disabled()
+                            ->dehydrated(false),
 
                         DateTimePicker::make('order_date')
                             ->label('Tanggal Pesanan')
@@ -109,6 +124,15 @@ class OrderResource extends Resource
                                     $set('paid_at', null);
                                 }
                             }),
+
+                        Select::make('delivery_option')
+                            ->label('Opsi Pengambilan')
+                            ->options([
+                                'dijemput' => 'Di Jemput',
+                                'diantar' => 'Diantar',
+                            ])
+                            ->default('dijemput')
+                            ->required(),
 
                         Select::make('processed_by_admin_id')
                             ->label('Diproses Oleh Admin')
@@ -215,8 +239,17 @@ class OrderResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('kode_pesanan')->searchable()->sortable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('customer.name')->label('Pelanggan')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('customer.phone')->label('No. Telepon')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('order_date')->label('Tgl Pesan')->dateTime('d M Y, H:i')->sortable(),
                 Tables\Columns\TextColumn::make('total_amount')->label('Total Harga')->money('IDR')->sortable(),
+                Tables\Columns\TextColumn::make('delivery_option')
+                    ->label('Pengambilan')
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'dijemput' => 'Di Jemput',
+                        'diantar' => 'Diantar',
+                        default => $state,
+                    })
+                    ->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('status_pesanan')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
@@ -296,7 +329,7 @@ class OrderResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\OrderDetailsRelationManager::class,
+            //
         ];
     }
 

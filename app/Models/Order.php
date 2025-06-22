@@ -17,6 +17,7 @@ class Order extends Model
         'total_amount',
         'catatan_pelanggan',
         'payment_status',
+        'delivery_option',
         'paid_at',
         'processed_by_admin_id',
         'catatan_internal',

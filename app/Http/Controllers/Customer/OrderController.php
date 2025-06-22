@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB; // Untuk transaksi
 use Illuminate\Validation\Rule; // Untuk validasi
 use Illuminate\Support\Facades\Log; // Untuk logging
 use Illuminate\Auth\Access\AuthorizationException;
+use App\Models\User;
 
 class OrderController extends Controller
 {
@@ -34,6 +35,8 @@ class OrderController extends Controller
             ],
             'items.*.quantity' => 'required|numeric|min:0.1',
             'catatan_pelanggan' => 'nullable|string|max:1000',
+            'delivery_option' => 'required|string|in:dijemput,diantar',
+            'phone' => 'required|string|max:20',
         ]);
 
         // Memulai transaksi database agar konsisten
@@ -70,13 +73,21 @@ class OrderController extends Controller
                 return back()->withInput()->withErrors(['items' => 'Minimal satu layanan harus dipilih.']);
             }
 
+            // Update nomor telepon pengguna jika berubah
+            $user = User::find(Auth::id());
+            if ($user && $user->phone !== $validatedData['phone']) {
+                $user->phone = $validatedData['phone'];
+                $user->save();
+            }
+
             // Buat Order Utama
             $order = Order::create([
-                'user_id' => Auth::id(),
+                'user_id' => $user->id,
                 'kode_pesanan' => 'INV-' . strtoupper(Str::random(4)) . '-' . date('YmdHis'),
                 'order_date' => now(),
                 'status_pesanan' => 'baru', // Status awal pesanan
                 'payment_status' => 'belum_bayar', // Status awal pembayaran
+                'delivery_option' => $validatedData['delivery_option'],
                 'total_amount' => $grandTotal,
                 'catatan_pelanggan' => $validatedData['catatan_pelanggan'] ?? null,
             ]);

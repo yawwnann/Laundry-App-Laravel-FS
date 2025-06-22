@@ -4,7 +4,9 @@
             <div class="flex">
                 <div class="shrink-0 flex items-center">
                     <a href="{{ Auth::check() ? (Auth::user()->role === 'admin' ? route('filament.admin.pages.dashboard') : route('customer.dashboard')) : url('/') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-700 dark:text-gray-200" />
+                    <span class="font-extrabold italic text-xl text-indigo-600 dark:text-white">
+                            FASTLAUNDRY
+                        </span>
                     </a>
                 </div>
 
@@ -22,6 +24,14 @@
                             <x-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.index')"
                                 class="text-gray-700 hover:text-indigo-700 dark:text-gray-300 dark:hover:text-indigo-400">
                                 {{ __('Riwayat Pesanan') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('customer.help.index')" :active="request()->routeIs('customer.help.index')"
+                            class="text-gray-700 hover:text-indigo-700 dark:text-gray-300 dark:hover:text-indigo-400">
+                                 {{ __('Bantuan & FAQ') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('customer.services.index')" :active="request()->routeIs('customer.services.index')"
+                            class="text-gray-700 hover:text-indigo-700 dark:text-gray-300 dark:hover:text-indigo-400">
+                                {{ __('Layanan Kami') }}
                             </x-nav-link>
                         </div>
                     @endif
@@ -104,6 +114,14 @@
                     <x-responsive-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.index')"
                         class="text-gray-700 hover:text-indigo-700 dark:text-gray-300 dark:hover:text-indigo-400">
                         {{ __('Riwayat Pesanan') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('customer.help.index')" :active="request()->routeIs('customer.help.index')"
+                    class="text-gray-700 hover:text-indigo-700 dark:text-gray-300 dark:hover:text-indigo-400">
+                         {{ __('Bantuan & FAQ') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('customer.services.index')" :active="request()->routeIs('customer.services.index')"
+                    class="text-gray-700 hover:text-indigo-700 dark:text-gray-300 dark:hover:text-indigo-400">
+                        {{ __('Layanan Kami') }}
                     </x-responsive-nav-link>
                 @endif
             </div>
